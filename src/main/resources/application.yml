@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: expense-api
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/expensedb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    show-sql: false
+
+  # Disable Flyway so migrations are not applied automatically after removing the dependency
+  flyway:
+    enabled: false
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:changeitchangeitchangeitchangeit}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+# Enable seeding of sample data on startup (default: false)
+app:
+  seed-data:
+    enabled: false

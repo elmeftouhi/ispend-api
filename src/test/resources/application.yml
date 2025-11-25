@@ -1,0 +1,10 @@
+spring:
+  flyway:
+    enabled: false
+    validate-on-migrate: false
+    clean-on-validation-error: true
+
+security:
+  jwt:
+    secret: testsecretchangemechangemegoodlength
+    expiration-ms: 86400000
