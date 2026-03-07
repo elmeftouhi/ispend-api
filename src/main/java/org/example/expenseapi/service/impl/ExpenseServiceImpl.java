@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import org.example.expenseapi.tenant.TenantContextHolder;
+
 @Service
 @Transactional
 public class ExpenseServiceImpl implements ExpenseService {
@@ -71,6 +73,12 @@ public class ExpenseServiceImpl implements ExpenseService {
             throw new RuntimeException("ExpenseStatus is required");
         }
 
+        // set tenant id from context (using Hibernate filter to scope queries)
+        String tenant = TenantContextHolder.getTenant();
+        if (tenant != null && !tenant.isBlank()) {
+            expense.setTenantId(tenant);
+        }
+
         return repository.save(expense);
     }
 
@@ -92,6 +100,14 @@ public class ExpenseServiceImpl implements ExpenseService {
             ExpenseStatus st = statusRepository.findById(expense.getExpenseStatus().getId())
                     .orElseThrow(() -> new RuntimeException("ExpenseStatus not found: " + expense.getExpenseStatus().getId()));
             existing.setExpenseStatus(st);
+        }
+
+        // Ensure tenant is not changed by client - preserve existing tenant
+        if (existing.getTenantId() == null || existing.getTenantId().isBlank()) {
+            String tenant = TenantContextHolder.getTenant();
+            if (tenant != null && !tenant.isBlank()) {
+                existing.setTenantId(tenant);
+            }
         }
 
         return repository.save(existing);

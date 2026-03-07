@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5433/miexpense_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    show-sql: true
+
+  # Disable Flyway so migrations are not applied automatically after removing the dependency
+  flyway:
+    enabled: false
+# Enable seeding of sample data on startup (default: false)
+app:
+  seed-data:
+    enabled: false

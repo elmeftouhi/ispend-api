@@ -12,9 +12,12 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.Map;
 
 @Component
 public class JwtUtil {
+
+    public static final String CLAIM_TENANT = "tenant";
 
     @Value("${security.jwt.secret}")
     private String jwtSecret;
@@ -41,6 +44,22 @@ public class JwtUtil {
                 .compact();
     }
 
+    /**
+     * Generate a token containing the tenant id as a claim.
+     */
+    public String generateToken(String subject, String tenantId) {
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + jwtExpirationMs);
+
+        return Jwts.builder()
+                .setSubject(subject)
+                .setIssuedAt(now)
+                .setExpiration(exp)
+                .addClaims(Map.of(CLAIM_TENANT, tenantId != null ? tenantId : ""))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public boolean validateToken(String token) {
         try {
             Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -53,6 +72,16 @@ public class JwtUtil {
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
         return claims.getSubject();
+    }
+
+    public String getTenantFromToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+            Object tid = claims.get(CLAIM_TENANT);
+            return tid != null ? String.valueOf(tid) : null;
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     /**
