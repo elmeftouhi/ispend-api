@@ -1,8 +1,4 @@
-# Ignore build artifacts and local files not needed in the image
 target/
-.mvn/
-.mvnw
-.mvnw.cmd
 .git/
 .gitignore
 .idea/
@@ -11,4 +7,3 @@ target/
 *.log
 **/node_modules
 .DS_Store
-
