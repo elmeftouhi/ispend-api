@@ -3,6 +3,7 @@ package org.example.expenseapi.controller;
 import jakarta.annotation.PostConstruct;
 import org.example.expenseapi.dto.AuthRequest;
 import org.example.expenseapi.dto.AuthResponse;
+import org.example.expenseapi.dto.UserCreateRequest;
 import org.example.expenseapi.security.JwtUtil;
 import org.example.expenseapi.security.JwtBlacklistService;
 import org.example.expenseapi.service.UserService;
@@ -18,6 +19,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Map;
 import java.util.Optional;
@@ -84,6 +91,35 @@ public class AuthController {
             Map<String, String> body = Map.of("error", "Invalid email or password");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
         }
+    }
+
+    @Operation(summary = "Register a new user", description = "Creates a new user account. Returns the created user's id.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "User created", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"id\":1}"))),
+            @ApiResponse(responseCode = "400", description = "Validation failed", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Email already in use", content = @Content),
+            @ApiResponse(responseCode = "503", description = "Registration service unavailable", content = @Content)
+    })
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody UserCreateRequest request) {
+        if (request.getEmail() != null && userService != null && userService.findByEmail(request.getEmail()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Email already in use"));
+        }
+
+        if (userService == null) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("error", "Registration service unavailable"));
+        }
+
+        User user = new User();
+        user.setFirstname(request.getFirstname());
+        user.setLastname(request.getLastname());
+        user.setEmail(request.getEmail());
+        user.setPassword(request.getPassword());
+        // Default to ACTIVE if not provided
+        user.setStatus(request.getStatus() != null ? request.getStatus() : UserStatus.ACTIVE);
+
+        User created = userService.createUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", created.getId()));
     }
 
     @PostMapping("/logout")

@@ -1,5 +1,6 @@
 package org.example.expenseapi.controller;
 
+import jakarta.validation.Valid;
 import org.example.expenseapi.dto.UserCreateRequest;
 import org.example.expenseapi.dto.UserDto;
 import org.example.expenseapi.dto.UserUpdateRequest;
@@ -25,7 +26,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody UserCreateRequest request) {
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserCreateRequest request) {
         // Return friendly error if the email is already used
         if (request.getEmail() != null && userService.findByEmail(request.getEmail()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)

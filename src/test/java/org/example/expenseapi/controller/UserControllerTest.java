@@ -183,7 +183,9 @@ public class UserControllerTest {
         req.setFirstname("New");
         req.setLastname("User");
         req.setEmail(email);
-        req.setPassword("pwd");
+        // Use a password that satisfies validation (min 6 chars) so the controller
+        // can reach the email conflict check and return 409 as expected by the test.
+        req.setPassword("securepwd");
         req.setStatus(UserStatus.ACTIVE);
 
         mockMvc.perform(post("/v1/users")

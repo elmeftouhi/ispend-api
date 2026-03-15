@@ -41,7 +41,8 @@ public class SecurityConfig {
                         "/swagger-ui/index.html",
                         "/swagger-ui/**"
                 ).permitAll()
-                .requestMatchers(HttpMethod.POST, "/v1/auth/**", "/v1/users/**").permitAll()
+                // Allow login and registration endpoints to be accessed by anyone
+                .requestMatchers(HttpMethod.POST, "/v1/auth/login", "/v1/auth/register").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form.disable());
