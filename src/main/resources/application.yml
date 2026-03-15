@@ -27,7 +27,3 @@ security:
     secret: ${JWT_SECRET:changeitchangeitchangeitchangeit}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
-# Enable seeding of sample data on startup (default: false)
-app:
-  seed-data:
-    enabled: false

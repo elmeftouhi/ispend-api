@@ -3,6 +3,7 @@ package org.example.expenseapi.service;
 import org.example.expenseapi.model.User;
 import org.example.expenseapi.model.UserStatus;
 import org.example.expenseapi.repository.UserRepository;
+import org.example.expenseapi.repository.TenantRepository;
 import org.example.expenseapi.security.JwtBlacklistService;
 import org.example.expenseapi.service.impl.UserServiceImpl;
 import org.example.expenseapi.testutil.UserBuilder;
@@ -25,6 +26,9 @@ class UserServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private TenantRepository tenantRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -66,11 +70,15 @@ class UserServiceImplTest {
             return u;
         });
 
+        // Simulate no tenants exist in repository so TenantRepository.count() == 0
+        when(tenantRepository.count()).thenReturn(0L);
+
         User created = userService.createUser(toCreate);
 
         assertNotNull(created);
         assertEquals(2L, created.getId());
         assertEquals("encoded-pass", created.getPassword());
+        assertNotNull(created.getTenantId());
         verify(passwordEncoder).encode("plainpass");
         verify(userRepository).save(any(User.class));
     }

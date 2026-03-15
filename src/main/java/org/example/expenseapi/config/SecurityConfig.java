@@ -1,6 +1,7 @@
 package org.example.expenseapi.config;
 
 import org.example.expenseapi.security.JwtAuthenticationFilter;
+import org.example.expenseapi.tenant.HibernateTenantFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,7 +27,7 @@ import java.util.Optional;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter, HibernateTenantFilter hibernateTenantFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -49,8 +50,9 @@ public class SecurityConfig {
         // allow frames for h2-console if present
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
-        // register JWT filter
+        // register JWT filter first, then the Hibernate tenant filter so tenant context is set
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(hibernateTenantFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

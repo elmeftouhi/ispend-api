@@ -62,15 +62,25 @@ public class AuthController {
             );
 
             // After successful authentication, check the user's status if UserService is available
+            String tenantId = null;
             if (this.userService != null) {
                 Optional<User> userOpt = userService.findByEmail(request.getEmail());
-                if (userOpt.isPresent() && userOpt.get().getStatus() == UserStatus.INACTIVE) {
-                    Map<String, String> body = Map.of("error", "User account is inactive");
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    if (user.getStatus() == UserStatus.INACTIVE) {
+                        Map<String, String> body = Map.of("error", "User account is inactive");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+                    }
+                    tenantId = user.getTenantId();
                 }
             }
 
-            String token = jwtUtil.generateToken(auth.getName());
+            String token;
+            if (tenantId != null) {
+                token = jwtUtil.generateToken(auth.getName(), tenantId);
+            } else {
+                token = jwtUtil.generateToken(auth.getName());
+            }
 
             // Register the issued token for the user so it can be revoked later
             if (jwtBlacklistService != null) {

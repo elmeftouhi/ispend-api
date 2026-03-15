@@ -15,8 +15,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 
+import org.hibernate.annotations.Filter;
+
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenant")
 public abstract class BasicEntity {
 
     @Id
@@ -36,6 +39,10 @@ public abstract class BasicEntity {
 
     @LastModifiedBy
     private String updatedBy;
+
+    // Tenant column is added to the base entity so the Hibernate filter can refer to it across entities
+    @Column(name = "tenant_id", nullable = true)
+    private String tenantId;
 
     // Getters and setters
     public Long getId() {
@@ -77,5 +84,12 @@ public abstract class BasicEntity {
     public void setUpdatedBy(String updatedBy) {
         this.updatedBy = updatedBy;
     }
-}
 
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+}
