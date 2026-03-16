@@ -3,7 +3,7 @@ services:
   app:
     build: .
     image: 'expense-api-v1:latest'
-    expose:
+    ports:
       - '8081:8080'
     depends_on:
       - db
