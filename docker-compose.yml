@@ -27,7 +27,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/expensedb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_PROFILES_ACTIVE: docker
     depends_on:
       - db
     restart: unless-stopped
