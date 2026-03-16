@@ -1,21 +1,24 @@
-# Multi-stage Dockerfile: build the jar with Maven, run with a slim JRE
+# Multi-stage Dockerfile for building and running the Spring Boot app
 
-FROM maven:3.9.4-eclipse-temurin-17 AS build
-WORKDIR /workspace
-# copy maven files first to leverage docker layer caching
-COPY pom.xml mvnw mvnw.cmd ./
+# Build stage: use Maven + JDK to build the fat jar
+FROM maven:3.9.4-eclipse-temurin-17 AS builder
+WORKDIR /workspace/app
+
+# Copy Maven wrapper and settings first to leverage layer caching
+COPY pom.xml mvnw ./
 COPY .mvn .mvn
+RUN chmod +x mvnw
+
+# Copy source and build
 COPY src ./src
+RUN ./mvnw -B -DskipTests package
 
-# package the application (skip tests to speed up image build)
-RUN mvn -B -DskipTests package
-
-# Runtime image
+# Run stage: small JRE image
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-# copy the jar from the build stage
-COPY --from=build /workspace/target/*.jar app.jar
+
+# Copy the built jar from the builder stage
+COPY --from=builder /workspace/app/target/*.jar app.jar
 
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app/app.jar"]
-
