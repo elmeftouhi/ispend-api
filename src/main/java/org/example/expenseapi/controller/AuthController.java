@@ -17,7 +17,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.example.expenseapi.dto.UserDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
@@ -135,6 +138,50 @@ public class AuthController {
         }
         // Always return 204 No Content to avoid revealing state
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Get current user", description = "Returns the currently authenticated user's information.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Authenticated user info"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated", content = @Content)
+    })
+    @GetMapping("/me")
+    public ResponseEntity<?> me() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        }
+
+        String email;
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        } else {
+            email = principal.toString();
+        }
+
+        if (userService == null) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("error", "User service unavailable"));
+        }
+
+        Optional<User> userOpt = userService.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
+        }
+
+        User user = userOpt.get();
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setFirstname(user.getFirstname());
+        dto.setLastname(user.getLastname());
+        dto.setEmail(user.getEmail());
+        dto.setStatus(user.getStatus());
+        dto.setCreatedAt(user.getCreatedAt());
+        dto.setCreatedBy(user.getCreatedBy());
+        dto.setUpdatedAt(user.getUpdatedAt());
+        dto.setUpdatedBy(user.getUpdatedBy());
+
+        return ResponseEntity.ok(dto);
     }
 
 }
